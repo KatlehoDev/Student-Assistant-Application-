@@ -9,6 +9,9 @@ class ApplicationViewModel extends ChangeNotifier {
 
   bool isLoading = false;
 
+  // =====================================================
+  // ADMIN: FETCH ALL APPLICATIONS + MODULES
+  // =====================================================
   Future<void> fetchApplications() async {
 
     try {
@@ -40,6 +43,9 @@ class ApplicationViewModel extends ChangeNotifier {
     }
   }
 
+  // =====================================================
+  // STUDENT: FETCH ONLY OWN APPLICATIONS
+  // =====================================================
   Future<void> fetchStudentApplications() async {
 
     try {
@@ -80,8 +86,16 @@ class ApplicationViewModel extends ChangeNotifier {
     }
   }
 
+  // =====================================================
+  // SUBMIT APPLICATION + MODULES
+  // =====================================================
   Future<void> addApplication(
       Map<String, dynamic> data) async {
+//added code
+/*
+Future<Map<String, dynamic>> addApplication(
+    Map<String, dynamic> data) async
+*/
 
     try {
 
@@ -93,6 +107,9 @@ class ApplicationViewModel extends ChangeNotifier {
 
       debugPrint("STEP 1 START");
 
+      // =================================================
+      // INSERT APPLICATION
+      // =================================================
       final app = await supabase
           .from('applications')
           .insert({
@@ -110,12 +127,18 @@ class ApplicationViewModel extends ChangeNotifier {
       debugPrint(
           "APPLICATION RESPONSE: $app");
 
+      // =================================================
+      // GET APPLICATION ID
+      // =================================================
       final String applicationId =
           app['id'].toString();
 
       debugPrint(
           "APPLICATION ID: $applicationId");
 
+      // =================================================
+      // INSERT MODULE 1
+      // =================================================
       if (data['module_one_name'] != null &&
           data['module_one_name']
               .toString()
@@ -137,6 +160,9 @@ class ApplicationViewModel extends ChangeNotifier {
             "MODULE 1 SUCCESS: $module1");
       }
 
+      // =================================================
+      // INSERT MODULE 2
+      // =================================================
       if (data['module_two_name'] != null &&
           data['module_two_name']
               .toString()
@@ -160,8 +186,32 @@ class ApplicationViewModel extends ChangeNotifier {
 
       debugPrint("ALL INSERTS SUCCESS");
 
+      // refresh student data
       await fetchStudentApplications();
     
+    /*added code
+    await fetchStudentApplications();
+
+return {
+  'id': app['id'],
+  'student_name': data['student_name'],
+  'student_number': data['student_number'],
+  'year_of_study': data['year_of_study'],
+  'status': 'Pending',
+  'application_modules': [
+    {
+      'module_name': data['module_one_name'],
+      'status': 'Pending',
+    },
+    if (data['module_two_name'] != null &&
+        data['module_two_name'].toString().trim().isNotEmpty)
+      {
+        'module_name': data['module_two_name'],
+        'status': 'Pending',
+      },
+  ],
+};
+end added code*/
     } catch (e) {
 
       debugPrint("addApplication ERROR: $e");
@@ -170,6 +220,9 @@ class ApplicationViewModel extends ChangeNotifier {
     }
   }
 
+  // =====================================================
+  // ADMIN: APPROVE / REJECT MODULE
+  // =====================================================
   Future<void> updateModule(
       String moduleId,
       String status,
@@ -196,6 +249,9 @@ class ApplicationViewModel extends ChangeNotifier {
     }
   }
 
+  // =====================================================
+  // ADMIN: DELETE MODULE
+  // =====================================================
   Future<void> deleteModule(
       String moduleId,
       ) async {
@@ -219,18 +275,23 @@ class ApplicationViewModel extends ChangeNotifier {
     }
   }
 
+  // =====================================================
+  // DELETE FULL APPLICATION
+  // =====================================================
   Future<void> deleteApplication(
       String applicationId,
       ) async {
 
     try {
 
+      // delete modules first
       await supabase
           .from('application_modules')
           .delete()
           .eq('application_id',
               applicationId);
 
+      // delete application
       await supabase
           .from('applications')
           .delete()
@@ -247,6 +308,4 @@ class ApplicationViewModel extends ChangeNotifier {
           "deleteApplication ERROR: $e");
     }
   }
-
-  
 }
