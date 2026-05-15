@@ -1,3 +1,18 @@
+// models/application_model.dart
+/*
+Student Numbers : 224005352, 224120586, 224063746, 224049675, 224124912, 222022131, 224127468, 224124382, 224086876
+
+Student Names : Mphomela Katleho, Motaung Vincent, Asande Mkabela, Vuyisile Fihlo, Tabi Malefetsane, Tsebano Stemer,
+                Hlongwane Luyanda, Sisekelo Mtshali, Kasa Tlotliso
+
+Question Page : Application Model
+
+
+*/ 
+
+
+
+
 class ApplicationModel {
   final String id;
   final String studentName;
