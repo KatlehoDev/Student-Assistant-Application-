@@ -21,6 +21,7 @@ class AuthService {
     return response;
   }
 
+  // REGISTER
   Future<AuthResponse> register({
     required String email,
     required String password,
@@ -35,16 +36,19 @@ class AuthService {
     return response;
   }
 
+  // LOGOUT
   Future<void> logout() async {
 
     await supabase.auth.signOut();
   }
 
+  // CURRENT USER
   User? getCurrentUser() {
 
     return supabase.auth.currentUser;
   }
 
+  // CHECK IF USER IS LOGGED IN
   bool isLoggedIn() {
 
     return supabase.auth.currentUser != null;
