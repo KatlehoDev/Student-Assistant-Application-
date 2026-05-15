@@ -47,7 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SnackBar(content: Text("Account created successfully")),
       );
 
-      Navigator.pop(context); 
+      Navigator.pop(context); // go back to login
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -76,7 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-             
+              // EMAIL
               TextFormField(
                 controller: emailController,
                 decoration: const InputDecoration(
@@ -93,6 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               const SizedBox(height: 15),
 
+              // PASSWORD
               TextFormField(
                 controller: passwordController,
                 obscureText: true,
@@ -113,6 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               const SizedBox(height: 25),
 
+              // REGISTER BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 50,
