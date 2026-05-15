@@ -7,6 +7,9 @@ class AuthViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
+  // =========================
+  // LOGIN
+  // =========================
   Future<bool> login({required String email, required String password}) async {
     try {
       isLoading = true;
@@ -26,6 +29,9 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  // =========================
+  // REGISTER (MULTIPLE STUDENTS)
+  // =========================
   Future<bool> register({
     required String email,
     required String password,
@@ -48,6 +54,9 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  // =========================
+  // LOGOUT
+  // =========================
   Future<void> logout() async {
     try {
       await supabase.auth.signOut();
@@ -57,5 +66,8 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  // =========================
+  // GET CURRENT USER
+  // =========================
   User? get currentUser => supabase.auth.currentUser;
 }
