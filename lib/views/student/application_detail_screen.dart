@@ -7,7 +7,9 @@ class ApplicationDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  
+    // =====================================
+    // MODULES
+    // =====================================
     final modules = application['application_modules'] ?? [];
 
     return Scaffold(
@@ -55,6 +57,9 @@ class ApplicationDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
 
                 children: [
+                  // =========================
+                  // SUCCESS ICON
+                  // =========================
                   Center(
                     child: CircleAvatar(
                       radius: 45,
@@ -70,6 +75,9 @@ class ApplicationDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
+                  // =========================
+                  // SUCCESS TITLE
+                  // =========================
                   const Center(
                     child: Text(
                       "Application Submitted Successfully",
@@ -96,6 +104,10 @@ class ApplicationDetailScreen extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 35),
+
+                  // =========================
+                  // APPLICATION INFO TITLE
+                  // =========================
                   Text(
                     "Application Information",
                     style: TextStyle(
@@ -107,6 +119,9 @@ class ApplicationDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
+                  // =========================
+                  // APPLICATION INFO
+                  // =========================
                   buildDetailCard(
                     Icons.confirmation_number,
                     "Application ID",
@@ -134,6 +149,10 @@ class ApplicationDetailScreen extends StatelessWidget {
                   buildStatusCard(application['status'] ?? 'Pending'),
 
                   const SizedBox(height: 30),
+
+                  // =========================
+                  // MODULES TITLE
+                  // =========================
                   Text(
                     "Modules Applied For",
                     style: TextStyle(
@@ -144,6 +163,10 @@ class ApplicationDetailScreen extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 18),
+
+                  // =========================
+                  // MODULES LIST
+                  // =========================
                   modules.isEmpty
                       ? Text(
                           "No modules found",
@@ -223,6 +246,9 @@ class ApplicationDetailScreen extends StatelessWidget {
     );
   }
 
+  // =====================================
+  // DETAIL CARD
+  // =====================================
   Widget buildDetailCard(IconData icon, String title, String value) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -277,6 +303,9 @@ class ApplicationDetailScreen extends StatelessWidget {
     );
   }
 
+  // =====================================
+  // STATUS CARD
+  // =====================================
   Widget buildStatusCard(String status) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),

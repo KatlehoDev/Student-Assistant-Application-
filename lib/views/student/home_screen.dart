@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/application_viewmodel.dart';
 import 'application_form_screen.dart';
-import 'dart:async';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,130 +10,285 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final supabase = Supabase.instance.client;
-  List<Map<String, dynamic>> applications = [];
-  bool isLoading = true;
-
-  late final StreamSubscription<List<Map<String, dynamic>>> _subscription;
-
+class _HomeScreenState extends State<HomeScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    fetchApplications();
-    _setupRealtime();
+
+    WidgetsBinding.instance.addObserver(this);
+
+    Future.microtask(() {
+      Provider.of<ApplicationViewModel>(
+        context,
+        listen: false,
+      ).fetchStudentApplications();
+    });
   }
 
-  Future<void> fetchApplications() async {
-    setState(() => isLoading = true);
-
-    try {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
-
-      final response = await supabase
-          .from('profiles')
-          .select()
-          .eq('user_id', user.id)
-          .order('created_at', ascending: false);
-
-      setState(() {
-        applications = List<Map<String, dynamic>>.from(response);
-      });
-    } catch (e) {
-      print("Fetch Error: $e");
-    } finally {
-      setState(() => isLoading = false);
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      Provider.of<ApplicationViewModel>(
+        context,
+        listen: false,
+      ).fetchStudentApplications();
     }
-  }
-
-  void _setupRealtime() {
-    final user = supabase.auth.currentUser;
-    if (user == null) return;
-
-    _subscription = supabase
-        .from('profiles')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', user.id)
-        .listen((data) {
-          print(" Realtime update received!");
-          setState(() {
-            applications = List<Map<String, dynamic>>.from(data);
-          });
-        });
   }
 
   @override
   void dispose() {
-    _subscription.cancel(); 
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final vm = Provider.of<ApplicationViewModel>(context);
+
     return Scaffold(
+      backgroundColor: Colors.blueGrey.shade50,
+
       appBar: AppBar(
-        title: const Text('Student Home'),
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: fetchApplications),
-        ],
+        title: const Text(
+          "My Applications",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.blueGrey,
+        foregroundColor: Colors.white,
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : applications.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No applications yet.\nTap + to create one.',
-                    textAlign: TextAlign.center,
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: fetchApplications,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: applications.length,
-                    itemBuilder: (context, index) {
-                      final app = applications[index];
-                      final status = app['status']?.toString() ?? 'Pending';
 
-                      Color statusColor = Colors.orange;
-                      if (status == 'Approved') statusColor = Colors.green;
-                      if (status == 'Rejected') statusColor = Colors.red;
-
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: ListTile(
-                          title: Text(
-                            app['full_name'] ?? 'Unknown',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(app['student_number'] ?? ''),
-                          trailing: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              status,
-                              style: TextStyle(color: statusColor, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
+        backgroundColor: Colors.blueGrey,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        onPressed: () {
+          Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const ApplicationFormScreen()),
+            MaterialPageRoute(
+              builder: (_) => const ApplicationFormScreen(),
+            ),
           );
-          fetchApplications(); // Refresh after coming back
         },
         child: const Icon(Icons.add),
       ),
+
+      body: vm.isLoading
+          ? Center(
+              child: CircularProgressIndicator(
+                color: Colors.blueGrey,
+              ),
+            )
+          : vm.applications.isEmpty
+              ? Center(
+                  child: Text(
+                    "No applications found",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.blueGrey.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: vm.applications.length,
+                  itemBuilder: (context, index) {
+                    final app = vm.applications[index];
+
+                    final modules = List<Map<String, dynamic>>.from(
+                      app['application_modules'] ?? [],
+                    );
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blueGrey.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+
+                      child: Card(
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: ExpansionTile(
+                          tilePadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
+
+                          childrenPadding: const EdgeInsets.only(
+                            left: 16,
+                            right: 16,
+                            bottom: 16,
+                          ),
+
+                          collapsedShape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.blueGrey.shade100,
+                            child: Icon(
+                              Icons.person,
+                              color: Colors.blueGrey.shade800,
+                            ),
+                          ),
+
+                          title: Text(
+                            app['student_name'] ?? "",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blueGrey.shade900,
+                              fontSize: 16,
+                            ),
+                          ),
+
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.blueGrey.shade100,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                app['status'] ?? "Pending",
+                                style: TextStyle(
+                                  color: Colors.blueGrey.shade800,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          children: [
+                            Divider(
+                              color: Colors.blueGrey.shade100,
+                              thickness: 1,
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            _buildInfoRow(
+                              Icons.badge,
+                              "Student Number",
+                              app['student_number'].toString(),
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            _buildInfoRow(
+                              Icons.school,
+                              "Year of Study",
+                              app['year_of_study'].toString(),
+                            ),
+
+                            const SizedBox(height: 18),
+
+                            Text(
+                              "Modules",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.blueGrey.shade900,
+                              ),
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            ...modules.map((m) {
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.blueGrey.shade50,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor:
+                                        Colors.blueGrey.shade200,
+                                    child: Icon(
+                                      Icons.book,
+                                      color: Colors.blueGrey.shade900,
+                                      size: 20,
+                                    ),
+                                  ),
+
+                                  title: Text(
+                                    m['module_name'] ?? '',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.blueGrey.shade900,
+                                    ),
+                                  ),
+
+                                  subtitle: Text(
+                                    m['status'] ?? '',
+                                    style: TextStyle(
+                                      color: Colors.blueGrey.shade700,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+    );
+  }
+
+  Widget _buildInfoRow(
+    IconData icon,
+    String title,
+    String value,
+  ) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: Colors.blueGrey,
+        ),
+
+        const SizedBox(width: 10),
+
+        Text(
+          "$title: ",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.blueGrey.shade800,
+          ),
+        ),
+
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: Colors.blueGrey.shade700,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

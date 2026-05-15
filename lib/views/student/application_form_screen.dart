@@ -19,6 +19,10 @@ class _ApplicationFormScreenState
 
   final TextEditingController studentNumberController =
       TextEditingController();
+
+  // =====================================================
+  // MODULE DROPDOWN LIST
+  // =====================================================
   final List<String> modules = [
     "SOD",
     "INT",
@@ -41,9 +45,14 @@ class _ApplicationFormScreenState
     super.dispose();
   }
 
+  // =====================================================
+  // SUBMIT APPLICATION
+  // =====================================================
+
   Future<void> submitApplication() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // prevent duplicate module selection
     if (selectedModule1 == selectedModule2 &&
         selectedModule2 != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,6 +77,9 @@ class _ApplicationFormScreenState
     final supabase = Supabase.instance.client;
 
     try {
+      // =================================================
+      // INSERT APPLICATION
+      // =================================================
       final app = await supabase
           .from('applications')
           .insert({
@@ -85,6 +97,9 @@ class _ApplicationFormScreenState
       final String applicationId =
           app['id'].toString();
 
+      // =================================================
+      // INSERT MODULE 1
+      // =================================================
       await supabase
           .from('application_modules')
           .insert({
@@ -93,6 +108,9 @@ class _ApplicationFormScreenState
         'status': 'Pending',
       });
 
+      // =================================================
+      // INSERT MODULE 2 (OPTIONAL)
+      // =================================================
       if (selectedModule2 != null &&
           selectedModule2!.isNotEmpty) {
         await supabase
@@ -106,6 +124,7 @@ class _ApplicationFormScreenState
 
       if (!mounted) return;
 
+      // build data for detail screen
       final applicationData = {
         'id': applicationId,
         'student_name':
@@ -128,6 +147,7 @@ class _ApplicationFormScreenState
         ],
       };
 
+      // navigate to details screen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -151,6 +171,10 @@ class _ApplicationFormScreenState
       setState(() => isLoading = false);
     }
   }
+
+  // =====================================================
+  // INPUT DECORATION
+  // =====================================================
 
   InputDecoration customDecoration(
     String label,
@@ -229,7 +253,7 @@ class _ApplicationFormScreenState
                     CrossAxisAlignment.start,
 
                 children: [
-                 
+                  // HEADER ICON
                   Center(
                     child: CircleAvatar(
                       radius: 40,
@@ -273,7 +297,7 @@ class _ApplicationFormScreenState
 
                   const SizedBox(height: 30),
 
-                  
+                  // FULL NAME
                   TextFormField(
                     controller: fullNameController,
 
@@ -294,7 +318,7 @@ class _ApplicationFormScreenState
 
                   const SizedBox(height: 18),
 
-                 
+                  // STUDENT NUMBER
                   TextFormField(
                     controller:
                         studentNumberController,
@@ -316,9 +340,9 @@ class _ApplicationFormScreenState
 
                   const SizedBox(height: 18),
 
-                  
+                  // YEAR OF STUDY
                   DropdownButtonFormField<String>(
-                    initialValue: yearOfStudy,
+                    value: yearOfStudy,
 
                     decoration: customDecoration(
                       "Year Of Study",
@@ -359,8 +383,9 @@ class _ApplicationFormScreenState
 
                   const SizedBox(height: 18),
 
+                  // MODULE 1
                   DropdownButtonFormField<String>(
-                    initialValue: selectedModule1,
+                    value: selectedModule1,
 
                     decoration: customDecoration(
                       "Module 1",
@@ -391,8 +416,9 @@ class _ApplicationFormScreenState
 
                   const SizedBox(height: 18),
 
+                  // MODULE 2
                   DropdownButtonFormField<String>(
-                    initialValue: selectedModule2,
+                    value: selectedModule2,
 
                     decoration: customDecoration(
                       "Module 2 (Optional)",
@@ -415,6 +441,7 @@ class _ApplicationFormScreenState
 
                   const SizedBox(height: 35),
 
+                  // SUBMIT BUTTON
                   SizedBox(
                     width: double.infinity,
                     height: 55,
