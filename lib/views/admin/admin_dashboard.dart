@@ -21,6 +21,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
     fetchApplications();
   }
 
+  // =====================================
+  // FETCH APPLICATIONS + MODULES
+  // =====================================
   Future<void> fetchApplications() async {
     setState(() {
       isLoading = true;
@@ -49,6 +52,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
     });
   }
 
+  // =====================================
+  // APPROVE / REJECT MODULE
+  // =====================================
   Future<void> updateModuleStatus(
     String moduleId,
     String status,
@@ -59,50 +65,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
           .update({'status': status})
           .eq('id', moduleId);
 
-      final moduleData = await supabase
-          .from('application_modules')
-          .select('''
-            module_name,
-            applications!inner(user_id, student_name)
-          ''')
-          .eq('id', moduleId)
-          .single();
-
-      final studentId = moduleData['applications']['user_id'];
-      final moduleName = moduleData['module_name'] ?? 'Unknown Module';
-
-      await supabase.from('notifications').insert({
-        'user_id': studentId,
-        'title': status == 'Approved' 
-            ? ' Module Approved' 
-            : ' Module Rejected',
-        'message': 'Your module "$moduleName" has been $status.',
-        'type': status == 'Approved' ? 'success' : 'error',
-      });
-
       fetchApplications();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Module $status successfully!'),
-            backgroundColor: status == 'Approved' ? Colors.green : Colors.red,
-          ),
-        );
-      }
     } catch (e) {
       debugPrint("UPDATE ERROR: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update module'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
     }
   }
-  
+
+  // =====================================
+  // DELETE MODULE
+  // =====================================
   Future<void> deleteModule(String moduleId) async {
     try {
       await supabase
@@ -113,42 +84,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
       fetchApplications();
     } catch (e) {
       debugPrint("DELETE ERROR: $e");
-    }
-  }
-
-  Future<void> _logout() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Do you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Logout', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      try {
-        await supabase.auth.signOut();
-        if (mounted) {
-          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-        }
-      } catch (e) {
-        debugPrint("Logout Error: $e");
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Logout failed'), backgroundColor: Colors.red),
-          );
-        }
-      }
     }
   }
 
@@ -177,17 +112,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
             fontWeight: FontWeight.bold,
           ),
         ),
+
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.blueGrey,
         foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-            tooltip: 'Logout',
-          ),
-        ],
       ),
 
       body: isLoading
